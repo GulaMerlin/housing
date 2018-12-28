@@ -1,0 +1,153 @@
+{% extends 'base_main.html' %}
+
+{% block css %}
+    {{ super() }}
+    <link href="/static/css/ihome/index.css" rel="stylesheet">
+
+{% endblock %}
+
+{% block content %}
+
+        <div class="top-bar">
+            <img class="logo fl" src="/static/images/logo@128x59.png">
+            <div class="register-login fr" id="login_register" >
+                <a class="btn top-btn btn-theme" href="{{ url_for('user.register') }}" id="text">注册</a>
+                <a class="btn top-btn btn-theme" href="{{ url_for('user.login') }}">登录</a>
+            </div>
+            <div class="user-info fr" id="user_info"><span><i class="fa fa-user fa-lg"></i></span> <a class="user-name" href="{{ url_for('user.my') }}">我的主页</a></div>
+        </div>
+        <div class="swiper-container">
+            <div class="swiper-wrapper" id="banner">
+                <!--<div class="swiper-slide">-->
+                    <!--<a href="/detail.html?id=1"><img src="/static/images/home01.jpg"></a>-->
+                    <!--<div class="slide-title">房屋标题1</div>-->
+                <!--</div>-->
+
+            </div>
+            <div class="swiper-pagination"></div>
+        </div>
+        <div class="search-bar">
+            <button class="filter-btn" type="button" data-toggle="modal" data-target="#area-modal"><span class="fl" id="area-btn">选择城区</span><span class="fr"><i class="fa fa-map-marker fa-lg fa-fw"></i></span></button>
+            <button class="filter-btn" type="button" data-toggle="modal" data-target="#start-date-modal"><span class="fl" id="start-date-btn">入住日期</span><span class="fr"><i class="fa fa-calendar fa-lg fa-fw"></i></span></button>
+            <button class="filter-btn end-date" type="button" data-toggle="modal" data-target="#end-date-modal"><span class="fl" id="end-date-btn">离开日期</span><span class="fr"><i class="fa fa-calendar fa-lg fa-fw"></i></span></button>
+            <a class="btn search-btn btn-theme" href="#" onclick="goToSearchPage(this);" area-id="" start-date="" end-date="">搜索</a>
+            <div class="modal fade" id="area-modal" tabindex="-1" role="dialog" aria-labelledby="area-label">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="area-label">选择城区</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="area-list">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="start-date-modal" tabindex="-1" role="dialog" aria-labelledby="start-date-label">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="start-date-label">入住日期</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="date-select" id="start-date"></div>
+                            <input type="hidden" id="start-date-input">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-theme" onclick="setStartDate();">确定</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="end-date-modal" tabindex="-1" role="dialog" aria-labelledby="end-date-label">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="end-date-label">离开日期</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="date-select" id="end-date"></div>
+                            <input type="hidden" id="end-date-input">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-theme" onclick="setEndDate();">确定</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{{ super() }}
+{% endblock %}
+{% block js %}
+    {{ super() }}
+        <script src="/static/js/ihome/index.js"></script>
+
+        <script>
+
+
+$.ajax({
+                url: '/house/new_house/',
+                type: 'POST',
+                dataType: 'json',
+                success: function(data){
+                    if(data.code == '200'){
+                        $.each(data.area_data, function(index, area){
+                            $('.area-list').append(" <a href='#' area-id='"+ area.id +"'>"+area.name+"</a>")
+                        });
+                        $(".area-list a").click(function(e){
+                        $("#area-btn").html($(this).html());
+                        $(".search-btn").attr("area-id", $(this).attr("area-id"));
+                        $(".search-btn").attr("area-name", $(this).html());
+                        $("#area-modal").modal("hide");
+                    });
+                    }
+
+                },
+                error: function(){
+                    alert('获取信息失败')
+                }
+            });
+
+            $.ajax({
+                url: '/house/house_infos/',
+                type: 'GET',
+                dataType: 'json',
+                success: function(data){
+
+                    for(var i=0; i< data.houses.length;i++){
+                    $('#banner').append("<div class='swiper-slide'><a href='/house/detail/"+ data.houses[i].id +"'><img src='/static/media/pic/"+ data.houses[i].image +"'></a><div class='slide-title'>"+ data.houses[i].title +"</div></div>")
+                    };
+                    var mySwiper = new Swiper ('.swiper-container', {
+                        loop: true,
+                        autoplay: 2000,
+                        autoplayDisableOnInteraction: false,
+                        pagination: '.swiper-pagination',
+                        paginationType: 'fraction'
+                    })
+                },
+                error: function(){
+                    alert('获取数据失败')
+                }
+             })
+
+function goToSearchPage(th) {
+    var url = "/house/search/?";
+    url += ("aid=" + $(th).attr("area-id"));
+    url += "&";
+    var areaName = $(th).attr("area-name");
+    if (undefined == areaName) areaName="";
+    url += ("aname=" + areaName);
+    url += "&";
+    url += ("sd=" + $(th).attr("start-date"));
+    url += "&";
+    url += ("ed=" + $(th).attr("end-date"));
+    location.href = url;
+}
+
+        </script>
+{% endblock %}
